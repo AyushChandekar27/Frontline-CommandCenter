@@ -23,7 +23,7 @@ public class TeamRecommendationService {
      *   - Type match (40 pts)
      *   - Severity certification (30 pts)
      *   - Proximity (20 pts — closer = higher)
-     *   - Availability (10 pts: AVAILABLE=10, STANDBY=5, DEPLOYED=0)
+     *   - Availability (10 pts: AVAILABLE=10, RETURNING=5, dispatched=0)
      */
     public List<TeamRecommendationResponse> recommend(
             String alertType,
@@ -73,7 +73,7 @@ public class TeamRecommendationService {
 
         // Availability (10 pts)
         if ("AVAILABLE".equalsIgnoreCase(t.getAvailability())) score += 10;
-        else if ("STANDBY".equalsIgnoreCase(t.getAvailability())) score += 5;
+        else if ("RETURNING".equalsIgnoreCase(t.getAvailability())) score += 5;
 
         return score;
     }

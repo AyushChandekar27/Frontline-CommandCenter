@@ -56,7 +56,7 @@ public class AssignmentService {
         alertRepository.save(alert);
 
         // Update team availability
-        best.setAvailability("DEPLOYED");
+        best.setAvailability("EN_ROUTE");
         teamRepository.save(best);
 
         auditLogService.log("TEAM_ASSIGNED", "ASSIGNMENT", saved.getId().toString(),
@@ -76,6 +76,9 @@ public class AssignmentService {
                 .orElseThrow(() -> new RuntimeException("Alert not found: " + alertId));
         ResponseTeam team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("Team not found: " + teamId));
+        if (!"AVAILABLE".equalsIgnoreCase(team.getAvailability())) {
+            throw new RuntimeException("Team is not available for assignment.");
+        }
 
         TeamAssignment assignment = TeamAssignment.builder()
                 .alertId(alertId)
@@ -94,7 +97,7 @@ public class AssignmentService {
         alert.setAssignedTeamName(team.getName());
         alertRepository.save(alert);
 
-        team.setAvailability("DEPLOYED");
+        team.setAvailability("EN_ROUTE");
         teamRepository.save(team);
 
         auditLogService.log("TEAM_ASSIGNED", "ASSIGNMENT", saved.getId().toString(),
@@ -169,7 +172,7 @@ public class AssignmentService {
                 Arrays.stream(t.getHandlesSeverities().split(","))
                       .anyMatch(x -> x.trim().equalsIgnoreCase(alert.getSeverity()))) s += 30;
         if ("AVAILABLE".equalsIgnoreCase(t.getAvailability())) s += 20;
-        else if ("STANDBY".equalsIgnoreCase(t.getAvailability())) s += 10;
+        else if ("RETURNING".equalsIgnoreCase(t.getAvailability())) s += 10;
         if (alert.getLatitude() != null && t.getBaseLat() != null) {
             double dist = haversine(alert.getLatitude(), alert.getLongitude(),
                                     t.getBaseLat(), t.getBaseLng());

@@ -36,6 +36,8 @@ public class AlertService {
                 .mapY(req.getMapY())
                 .latitude(req.getLatitude())
                 .longitude(req.getLongitude())
+                .radiusKm(req.getRadiusKm())
+                .slaMinutes(req.getSlaMinutes())
                 .build();
 
         Alert saved = alertRepository.save(alert);
@@ -114,6 +116,8 @@ public class AlertService {
         alert.setMapY(req.getMapY());
         alert.setLatitude(req.getLatitude());
         alert.setLongitude(req.getLongitude());
+        alert.setRadiusKm(req.getRadiusKm());
+        alert.setSlaMinutes(req.getSlaMinutes());
 
         return toResponse(alertRepository.save(alert));
     }
