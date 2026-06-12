@@ -1,7 +1,6 @@
 // ── Drop-in replacement for AlertCard used in Dashboard.jsx ──
 // Replace the AlertCard function in Dashboard.jsx with this one.
 // Also add these imports at the top of Dashboard.jsx:
-//   import { AlertTypeIcon, MapPinIcon, UsersIcon, SEV_COLOR,
 //            StatusActiveIcon, StatusMonitorIcon, StatusResolvedIcon,
 //            AcknowledgeIcon } from '../components/icons';
 

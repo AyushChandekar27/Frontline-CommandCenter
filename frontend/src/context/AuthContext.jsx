@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { getToken, getUser, saveAuth, clearAuth } from '../services/auth';
+import { getUser, saveAuth, clearAuth } from '../services/auth';
 import { login as apiLogin } from '../services/api';
 
 const AuthContext = createContext(null);
