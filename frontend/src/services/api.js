@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getToken, clearAuth } from './auth';
 
-const BASE = 'http://localhost:8081';
+const BASE = 'https://frontline-commandcenter-production.up.railway.app';
 
 const api = axios.create({
     baseURL: `${BASE}/api`,
