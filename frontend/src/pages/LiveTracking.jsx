@@ -40,7 +40,8 @@ function timeLabel(iso) {
 
 export default function LiveTracking() {
     const { user }                 = useAuth();
-    const { locations }          = useTeamSimulation();
+    const canReadAlerts = ['ADMIN', 'SUPER_ADMIN'].includes(user?.role);
+    const { locations } = useTeamSimulation(canReadAlerts);
     const [teams, setTeams]      = useState([]);
     const [alerts, setAlerts]    = useState([]);
     const [search, setSearch]    = useState('');

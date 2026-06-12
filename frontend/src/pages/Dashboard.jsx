@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useAlerts } from '../hooks/useAlerts';
 import { useTeamSimulation } from '../hooks/useTeamSimulation';
-import { getTeams, getAlerts } from '../services/api';
+import { getTeams } from '../services/api';
 import OperationalMap from '../components/OperationalMap';
 import LayerControl from '../components/LayerControl';
 import TeamDetailPanel from '../components/TeamDetailPanel';
@@ -11,13 +12,6 @@ import { SEV_COLOR, FilterIcon } from '../components/icons';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-// ── Spacing grid ──────────────────────────────────────────────
-// All overlay positions are multiples of G.
-// Top row:    top:G    (first row of overlays from map edge)
-// Top row 2:  top:G*5  (second row, below tile switcher ~48px)
-// Bottom row: bottom:G (all bottom overlays same baseline)
-// Left col:   left:G
-// Right col:  right:G  (OperationalMap's toolbar sits right:G too)
 const G = 12;
 
 const OV = {
@@ -45,7 +39,9 @@ const EMPTY_FILTERS = { state:'', severity:'', type:'', team:'', status:'' };
 export default function Dashboard() {
     const navigate = useNavigate();
     const { alerts, stats, loading, error, lastFetched, changeStatus, ackAlert } = useAlerts();
-    const { locations: teamLocations } = useTeamSimulation();
+    const { user } = useAuth();
+    const canReadAlerts = ['ADMIN','SUPER_ADMIN'].includes(user?.role);
+    const { locations: teamLocations } = useTeamSimulation(canReadAlerts);
     const [teams, setTeams] = useState([]);
     const { layers, toggleLayer } = useMapStore();
 
@@ -55,7 +51,6 @@ export default function Dashboard() {
     const clearFilters = () => setFilters(EMPTY_FILTERS);
     const activeCount = Object.values(filters).filter(Boolean).length;
 
-    const [allAlerts, setAllAlerts]       = useState([]);
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [flyToTeam, setFlyToTeam]       = useState(null);
     const [statsOpen, setStatsOpen]       = useState(false);
@@ -64,7 +59,6 @@ export default function Dashboard() {
 
     React.useEffect(() => {
         getTeams().then(setTeams).catch(() => {});
-        getAlerts().then(setAllAlerts).catch(() => {});
     }, []);
 
     const handleTeamClick = useCallback((loc, team) => {
@@ -138,18 +132,13 @@ export default function Dashboard() {
         </div>
     );
 
-    // Tile switcher in OperationalMap is at top:G, left:G, height ~34px
-    // Filter panel should appear below it: top: G + 34 + G = G*4 ≈ 48 + G
-    const FILTER_TOP    = G + 34 + G;   // 58 — below tile switcher
-    const BOTTOM_ROW    = G;            // all bottom overlays same baseline
-    // Right-side toolbar in OperationalMap occupies right:G, width ~36px
-    // Charts overlay must clear it: right: G + 36 + G = 60
-    const CHART_RIGHT   = G + 36 + G;  // 60
+    const FILTER_TOP  = G + 34 + G;
+    const BOTTOM_ROW  = G;
+    const CHART_RIGHT = G + 36 + G;
 
     return (
         <div style={{ padding:'14px 18px' }}>
 
-            {/* ── Header ── */}
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
                 <div>
                     <div style={{ fontSize:9, letterSpacing:'0.14em', color:'var(--muted)', fontFamily:'var(--mono)' }}>
@@ -160,8 +149,8 @@ export default function Dashboard() {
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                     {lastFetched && (
                         <span style={{ fontSize:9, color:'var(--muted)', fontFamily:'var(--mono)' }}>
-              {lastFetched.toLocaleTimeString()}
-            </span>
+                            {lastFetched.toLocaleTimeString()}
+                        </span>
                     )}
                     <LayerControl layers={layers} onToggle={toggleLayer}/>
                     <button onClick={() => setFiltersOpen(o => !o)} style={{
@@ -176,8 +165,8 @@ export default function Dashboard() {
                         Filters
                         {activeCount > 0 && (
                             <span style={{ background:'var(--blue)', color:'#fff', borderRadius:'50%', width:14, height:14, fontSize:8, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>
-                {activeCount}
-              </span>
+                                {activeCount}
+                            </span>
                         )}
                     </button>
                 </div>
@@ -185,7 +174,6 @@ export default function Dashboard() {
 
             {error && <div className="error-banner" style={{ marginBottom:12 }}>{error}</div>}
 
-            {/* ── Full-width map — all overlays inside ── */}
             <div style={{
                 position: 'relative',
                 width: '100%',
@@ -205,7 +193,6 @@ export default function Dashboard() {
                     flyToTeam={flyToTeam}
                 />
 
-                {/* ── Filter panel — top-left, below tile switcher ── */}
                 {filtersOpen && (
                     <div style={{ ...OV, top: FILTER_TOP, left: G, width: 218, padding:'11px 12px' }}>
                         <div style={{ fontSize:9, letterSpacing:'0.12em', color:'var(--muted)', fontFamily:'var(--mono)', marginBottom:8, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -238,23 +225,20 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* Active filter chips — same top-left anchor */}
                 {activeCount > 0 && !filtersOpen && (
                     <div style={{ ...OV, top: FILTER_TOP, left: G, padding:'5px 9px', display:'flex', gap:5, flexWrap:'wrap', maxWidth:280 }}>
                         {Object.entries(filters).filter(([, v]) => v).map(([k, v]) => (
                             <span key={k} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(51,12,137,0.2)', border:'1px solid rgba(51,12,137,0.4)', borderRadius:4, padding:'2px 7px', fontSize:9, color:'#a78bfa', fontFamily:'var(--mono)' }}>
-                {v}
+                                {v}
                                 <button onClick={() => setF(k, '')} style={{ background:'none', border:'none', cursor:'pointer', color:'#a78bfa', padding:0, fontSize:11, lineHeight:1 }}>×</button>
-              </span>
+                            </span>
                         ))}
                     </div>
                 )}
 
-                {/* ── Stats — bottom-left ── */}
                 <div style={{ ...OV, bottom: BOTTOM_ROW, left: G, padding:0, overflow:'hidden' }}>
-                    <button
-                        onClick={() => setStatsOpen(o => !o)}
-                        style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'5px 10px', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontFamily:'var(--mono)', fontSize:9, letterSpacing:'0.1em' }}>
+                    <button onClick={() => setStatsOpen(o => !o)}
+                            style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'5px 10px', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontFamily:'var(--mono)', fontSize:9, letterSpacing:'0.1em' }}>
                         STATS · {filtered.length}
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                             <polyline points={statsOpen ? '18 15 12 9 6 15' : '6 9 12 15 18 9'}/>
@@ -278,11 +262,9 @@ export default function Dashboard() {
                     )}
                 </div>
 
-                {/* ── Charts — bottom-right, clears map toolbar ── */}
                 <div style={{ ...OV, bottom: BOTTOM_ROW, right: CHART_RIGHT, width: 190, padding:0, overflow:'hidden' }}>
-                    <button
-                        onClick={() => setChartsOpen(o => !o)}
-                        style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'5px 10px', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontFamily:'var(--mono)', fontSize:9, letterSpacing:'0.1em' }}>
+                    <button onClick={() => setChartsOpen(o => !o)}
+                            style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'5px 10px', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontFamily:'var(--mono)', fontSize:9, letterSpacing:'0.1em' }}>
                         BY CATEGORY
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                             <polyline points={chartsOpen ? '18 15 12 9 6 15' : '6 9 12 15 18 9'}/>
@@ -314,11 +296,9 @@ export default function Dashboard() {
                     )}
                 </div>
 
-                {/* ── Feed — bottom-center, expands upward ── */}
                 <div style={{ ...OV, bottom: BOTTOM_ROW, left:'50%', transform:'translateX(-50%)', padding:0, overflow:'hidden', minWidth:156 }}>
-                    <button
-                        onClick={() => setFeedOpen(o => !o)}
-                        style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'5px 10px', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontFamily:'var(--mono)', fontSize:9, letterSpacing:'0.1em' }}>
+                    <button onClick={() => setFeedOpen(o => !o)}
+                            style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'5px 10px', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontFamily:'var(--mono)', fontSize:9, letterSpacing:'0.1em' }}>
                         LIVE FEED ({feedAlerts.length})
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                             <polyline points={feedOpen ? '18 15 12 9 6 15' : '6 9 12 15 18 9'}/>
@@ -341,7 +321,6 @@ export default function Dashboard() {
                     )}
                 </div>
 
-                {/* ── Team detail panel — right edge, full height ── */}
                 {selectedTeam && (
                     <div style={{
                         position:'absolute', top:0, right:0, bottom:0, width:324, zIndex:900,
@@ -352,7 +331,7 @@ export default function Dashboard() {
                         <TeamDetailPanel
                             team={selectedTeam.team}
                             loc={teamLocations.find(l => l.teamId === selectedTeam.loc.teamId) || selectedTeam.loc}
-                            alerts={allAlerts}
+                            alerts={alerts}
                             onClose={handleTeamClose}
                         />
                     </div>
