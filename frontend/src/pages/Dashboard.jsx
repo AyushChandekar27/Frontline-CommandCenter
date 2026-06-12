@@ -7,7 +7,7 @@ import OperationalMap from '../components/OperationalMap';
 import LayerControl from '../components/LayerControl';
 import TeamDetailPanel from '../components/TeamDetailPanel';
 import { useMapStore } from '../hooks/useMapStore';
-import { SEV_COLOR, AlertTypeIcon, FilterIcon } from '../components/icons';
+import { SEV_COLOR, FilterIcon } from '../components/icons';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
