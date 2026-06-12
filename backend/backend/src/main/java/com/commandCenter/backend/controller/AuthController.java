@@ -21,7 +21,7 @@ public class AuthController {
 
     private final UserRepository  userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil         jwtUtil;
+    private final JwtUtil            jwtUtil;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
