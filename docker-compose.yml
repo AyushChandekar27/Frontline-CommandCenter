@@ -1,0 +1,15 @@
+services:
+
+  backend:
+    image: command-center
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:postgresql://ep-spring-bar-aoa85nw8.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&currentSchema=public
+      DB_USERNAME: neondb_owner
+      DB_PASSWORD: npg_BRtG7cMyJge3
+
+  frontend:
+    image: command-center-frontend
+    ports:
+      - "3000:3000"
