@@ -39,6 +39,12 @@ public class DataSeeder implements ApplicationRunner {
                 .role(User.Role.TEAM)
                 .build());
 
+        userRepository.save(User.builder()
+                .username("team2")
+                .password(passwordEncoder.encode("team123"))
+                .role(User.Role.TEAM)
+                .build());
+
         log.info("[DataSeeder] Default users created: superadmin / admin / team1");
     }
 }
